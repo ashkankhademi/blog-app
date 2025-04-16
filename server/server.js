@@ -1,12 +1,23 @@
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const port = 3000;
 const API_URL = "http://localhost:4000";
 
-app.use(express.static("public"));
+// Fix for __dirname in ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Set EJS as view engine and fix views directory
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// Serve static CSS from client/public/styles
+app.use(express.static(path.join(__dirname, "..", "client", "public")));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -15,22 +26,21 @@ app.use(bodyParser.json());
 app.get("/", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
-    console.log(response);
     res.render("index.ejs", { posts: response.data });
   } catch (error) {
     res.status(500).json({ message: "Error fetching posts" });
   }
 });
 
-// Route to render the edit page
+// Route to render the create page
 app.get("/new", (req, res) => {
   res.render("modify.ejs", { heading: "New Post", submit: "Create Post" });
 });
 
+// Route to render the edit page
 app.get("/edit/:id", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts/${req.params.id}`);
-    console.log(response.data);
     res.render("modify.ejs", {
       heading: "Edit Post",
       submit: "Update Post",
@@ -44,8 +54,7 @@ app.get("/edit/:id", async (req, res) => {
 // Create a new post
 app.post("/api/posts", async (req, res) => {
   try {
-    const response = await axios.post(`${API_URL}/posts`, req.body);
-    console.log(response.data);
+    await axios.post(`${API_URL}/posts`, req.body);
     res.redirect("/");
   } catch (error) {
     res.status(500).json({ message: "Error creating post" });
@@ -54,13 +63,8 @@ app.post("/api/posts", async (req, res) => {
 
 // Partially update a post
 app.post("/api/posts/:id", async (req, res) => {
-  console.log("called");
   try {
-    const response = await axios.patch(
-      `${API_URL}/posts/${req.params.id}`,
-      req.body
-    );
-    console.log(response.data);
+    await axios.patch(`${API_URL}/posts/${req.params.id}`, req.body);
     res.redirect("/");
   } catch (error) {
     res.status(500).json({ message: "Error updating post" });
@@ -78,5 +82,7 @@ app.get("/api/posts/delete/:id", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend server is running on http://localhost:${port}`);
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
+
+
