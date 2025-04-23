@@ -12,11 +12,11 @@ const API_URL = "http://localhost:4000";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Set EJS as view engine and fix views directory
+// Set EJS as view engine and views directory
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Serve static files like main.css
+// Serve static files (like main.css)
 app.use(express.static(path.join(__dirname, "..", "client", "public")));
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -24,19 +24,36 @@ app.use(bodyParser.json());
 
 /* ROUTES */
 
-// Render login page
+// Redirect root to login page
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
+
+// Login page
 app.get("/login", (req, res) => {
   res.render("login.ejs");
 });
 
-// Handle login form submission (temporary logic)
+// Handle login form (placeholder logic)
 app.post("/login", (req, res) => {
-  // You’ll add authentication here later
-  res.redirect("/");
+  // Authentication logic will be added later
+  res.redirect("/blog");
 });
 
-// Render main blog page
-app.get("/", async (req, res) => {
+// Signup page
+app.get("/signup", (req, res) => {
+  res.render("signup.ejs");
+});
+
+// Handle signup form (placeholder logic)
+app.post("/signup", (req, res) => {
+  // You'll add database logic here later
+  console.log("Signup data:", req.body);
+  res.redirect("/login");
+});
+
+// Blog home page
+app.get("/blog", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
     res.render("index.ejs", { posts: response.data });
@@ -45,12 +62,12 @@ app.get("/", async (req, res) => {
   }
 });
 
-// Render create new post form
+// New post form
 app.get("/new", (req, res) => {
   res.render("modify.ejs", { heading: "New Post", submit: "Create Post" });
 });
 
-// Render edit form with existing post data
+// Edit post form
 app.get("/edit/:id", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts/${req.params.id}`);
@@ -64,31 +81,31 @@ app.get("/edit/:id", async (req, res) => {
   }
 });
 
-// Handle post creation
+// Create post
 app.post("/api/posts", async (req, res) => {
   try {
     await axios.post(`${API_URL}/posts`, req.body);
-    res.redirect("/");
+    res.redirect("/blog");
   } catch (error) {
     res.status(500).json({ message: "Error creating post" });
   }
 });
 
-// Handle post updates
+// Update post
 app.post("/api/posts/:id", async (req, res) => {
   try {
     await axios.patch(`${API_URL}/posts/${req.params.id}`, req.body);
-    res.redirect("/");
+    res.redirect("/blog");
   } catch (error) {
     res.status(500).json({ message: "Error updating post" });
   }
 });
 
-// Handle post deletion
+// Delete post
 app.get("/api/posts/delete/:id", async (req, res) => {
   try {
     await axios.delete(`${API_URL}/posts/${req.params.id}`);
-    res.redirect("/");
+    res.redirect("/blog");
   } catch (error) {
     res.status(500).json({ message: "Error deleting post" });
   }
@@ -98,6 +115,7 @@ app.get("/api/posts/delete/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`✅ Server running at http://localhost:${port}`);
 });
+
 
 
 
